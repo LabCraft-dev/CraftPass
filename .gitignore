@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime state — never commit user data, databases or keys
+data/
+*.db
+*.db-wal
+*.db-shm
+*.pem
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

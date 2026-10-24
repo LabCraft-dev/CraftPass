@@ -1,0 +1,17 @@
+.git
+.gitignore
+.venv
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+data
+docs
+tests
+Makefile
+# generated at build time by the css stage
+craftpass/static/app.css
