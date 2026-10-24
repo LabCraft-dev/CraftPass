@@ -1,0 +1,50 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}Apps{% endblock %}
+{% block page_title_text %}Apps{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="card overflow-hidden">
+  <div class="border-b border-zinc-200 px-5 py-4">
+    <p class="text-sm text-zinc-500">{{ apps|length }} app{{ 's' if apps|length != 1 }} · slugs must match the Caddyfile guard imports</p>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-zinc-50">
+        <tr>
+          <th class="th">App</th><th class="th">Domain</th><th class="th">Mode</th>
+          <th class="th">Required group</th><th class="th">OIDC client</th><th class="th"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-100">
+        {% for a in apps %}
+        <tr class="hover:bg-zinc-50">
+          <td class="td">
+            <p class="font-medium text-zinc-900">{{ a.display_name }}</p>
+            <p class="font-mono text-xs text-zinc-500">{{ a.slug }}</p>
+          </td>
+          <td class="td font-mono text-xs text-zinc-600">{{ a.domain or '—' }}</td>
+          <td class="td">
+            {% if a.auth_mode == 'oidc' %}<span class="badge badge-teal">oidc</span>
+            {% else %}<span class="badge badge-zinc">forward_auth</span>{% endif %}
+          </td>
+          <td class="td">
+            {% if a.required_group %}<span class="badge badge-teal">{{ a.required_group }}</span>
+            {% else %}<span class="text-xs text-zinc-400">any</span>{% endif %}
+          </td>
+          <td class="td">
+            {% if a.auth_mode == 'oidc' %}
+              <span class="font-mono text-xs text-zinc-600">{{ a.oidc_client_id or 'not set' }}</span>
+              {% if not a.oidc_client_secret_hash %}<span class="badge badge-red ml-1">no secret</span>{% endif %}
+            {% else %}<span class="text-xs text-zinc-400">—</span>{% endif %}
+          </td>
+          <td class="td"><a class="text-sm font-medium text-teal-700 hover:underline" href="/admin/apps/{{ a.slug }}">Edit</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

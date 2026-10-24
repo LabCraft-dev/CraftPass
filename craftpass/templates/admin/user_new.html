@@ -1,0 +1,75 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}New user{% endblock %}
+{% block page_title_text %}New user{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl">
+  {{ flash_alerts(flash) }}
+  {% if errors %}
+  <div class="alert alert-error" role="alert">
+    <ul class="list-disc space-y-1 pl-4">
+      {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" action="/admin/users" class="card space-y-5 p-6">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div class="grid gap-5 md:grid-cols-2">
+      <div>
+        <label class="label" for="username">Username</label>
+        <input class="input" id="username" name="username" value="{{ form.get('username', '') }}" required autofocus>
+        <p class="hint">Lowercase letters, digits, dot, dash, underscore — 3 to 32 characters.</p>
+      </div>
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" value="{{ form.get('display_name', '') }}">
+      </div>
+      <div class="md:col-span-2">
+        <label class="label" for="email">Email</label>
+        <input class="input" id="email" name="email" type="email" value="{{ form.get('email', '') }}">
+        <p class="hint">Optional; flows into OIDC claims for Jellyfin sign-in.</p>
+      </div>
+    </div>
+
+    <fieldset class="grid gap-5 rounded-lg border border-zinc-200 p-4 md:grid-cols-2">
+      <legend class="px-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Password</legend>
+      <div class="md:col-span-2">
+        <label class="label" for="password">Set manually</label>
+        <div class="grid gap-4 md:grid-cols-2">
+          <input class="input" id="password" name="password" type="password" autocomplete="new-password" placeholder="min 10 chars, letters + digits">
+          <input class="input" name="confirm" type="password" autocomplete="new-password" placeholder="confirm">
+        </div>
+        <p class="hint">Or leave both empty and press “Generate”.</p>
+      </div>
+    </fieldset>
+
+    <fieldset class="rounded-lg border border-zinc-200 p-4">
+      <legend class="px-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Groups</legend>
+      {% if groups %}
+      <div class="grid gap-2 md:grid-cols-3">
+        {% for g in groups %}
+        <label class="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:border-teal-600/60">
+          <input type="checkbox" name="group_ids" value="{{ g.id }}" class="h-4 w-4 accent-teal-700">
+          <span class="font-medium text-zinc-800">{{ g.name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-zinc-500">No groups exist yet — create them in <a class="text-teal-700 hover:underline" href="/admin/groups">Groups</a>.</p>
+      {% endif %}
+    </fieldset>
+
+    <div class="flex flex-wrap gap-3">
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_admin" class="h-4 w-4 accent-teal-700" {{ 'checked' if form.get('is_admin') }}> Administrator</label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" class="h-4 w-4 accent-teal-700" {{ 'checked' if form.get('is_active', true) }}> Active</label>
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="btn-primary">Create user</button>
+      <button type="submit" name="password_mode" value="generate" class="btn-secondary">Generate password instead</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

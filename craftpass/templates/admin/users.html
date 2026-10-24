@@ -1,0 +1,52 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}Users{% endblock %}
+{% block page_title_text %}Users{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="card overflow-hidden">
+  <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
+    <p class="text-sm text-zinc-500">{{ users|length }} user{{ 's' if users|length != 1 }}</p>
+    <a href="/admin/users/new" class="btn-primary btn-sm">New user</a>
+  </div>
+
+  {% if users %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-zinc-50">
+        <tr>
+          <th class="th">User</th><th class="th">Groups</th><th class="th">2FA</th>
+          <th class="th">Admin</th><th class="th">Active</th><th class="th">Last sign-in</th><th class="th"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-100">
+        {% for u in users %}
+        <tr class="hover:bg-zinc-50">
+          <td class="td">
+            <p class="font-medium text-zinc-900">{{ u.username }}</p>
+            <p class="text-xs text-zinc-500">{{ u.display_name or '—' }}{% if u.email %} · {{ u.email }}{% endif %}</p>
+          </td>
+          <td class="td">
+            {% if u.group_list %}
+              {% for g in u.group_list.split(', ') %}<span class="badge badge-teal">{{ g }}</span> {% endfor %}
+            {% else %}
+              <span class="text-xs text-zinc-400">none</span>
+            {% endif %}
+          </td>
+          <td class="td">{% if u.totp_enabled %}<span class="badge badge-teal">on</span>{% else %}<span class="badge badge-zinc">off</span>{% endif %}</td>
+          <td class="td">{% if u.is_admin %}<span class="badge badge-amber">admin</span>{% else %}<span class="text-xs text-zinc-400">—</span>{% endif %}</td>
+          <td class="td">{% if u.is_active %}<span class="badge badge-zinc">active</span>{% else %}<span class="badge badge-red">disabled</span>{% endif %}</td>
+          <td class="td font-mono text-xs">{{ (u.last_login_at[:19].replace('T', ' ') if u.last_login_at else 'never') }}</td>
+          <td class="td"><a class="text-sm font-medium text-teal-700 hover:underline" href="/admin/users/{{ u.id }}">Edit</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="px-5 py-8 text-center text-sm text-zinc-500">No users yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

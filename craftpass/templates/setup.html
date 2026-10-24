@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import logo, flash_alerts %}
+{% block title %}Setup · CraftPass{% endblock %}
+
+{% block body %}
+<main class="bg-dots flex flex-1 items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    <div class="mb-8 flex flex-col items-center gap-2 text-center">
+      {{ logo() }}
+      <p class="text-sm text-zinc-500">Create the first administrator. This page disappears afterwards.</p>
+    </div>
+
+    <div class="card p-6">
+      {{ flash_alerts(flash) }}
+      {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+
+      <form method="post" action="/setup" class="space-y-4">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <div>
+          <label class="label" for="username">Username</label>
+          <input class="input" id="username" name="username" value="{{ form.get('username', '') }}" autocomplete="username" required autofocus>
+          <p class="hint">Lowercase letters, digits, dot, dash, underscore — 3 to 32 characters.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="label" for="display_name">Display name</label>
+            <input class="input" id="display_name" name="display_name" value="{{ form.get('display_name', '') }}" placeholder="e.g. Chandima">
+          </div>
+          <div>
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" value="{{ form.get('email', '') }}" placeholder="optional">
+          </div>
+        </div>
+        <div>
+          <label class="label" for="password">Password</label>
+          <input class="input" id="password" name="password" type="password" autocomplete="new-password" required>
+          <p class="hint">At least 10 characters, mixing letters and digits.</p>
+        </div>
+        <div>
+          <label class="label" for="confirm">Confirm password</label>
+          <input class="input" id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+        </div>
+        {% if needs_token %}
+        <div>
+          <label class="label" for="token">Setup token</label>
+          <input class="input font-mono" id="token" name="token" value="{{ provided_token or '' }}" required>
+          <p class="hint">SETUP_TOKEN from the server environment.</p>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn-primary w-full">Create administrator</button>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

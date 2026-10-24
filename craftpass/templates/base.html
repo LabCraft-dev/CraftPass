@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}CraftPass{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ccircle cx='16' cy='13' r='5' fill='white'/%3E%3Cpath d='M14 18h4l2.2 8H11.8z' fill='white'/%3E%3C/svg%3E">
+</head>
+<body class="flex min-h-full flex-col bg-zinc-100 text-zinc-900 antialiased">
+  {% block body %}{% endblock %}
+  {% block footer %}
+  <footer class="mt-auto border-t border-zinc-200 bg-white">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 text-xs text-zinc-500">
+      <span>CraftPass · LabCraft single sign-on</span>
+      <span class="font-mono">{{ settings.issuer.replace('https://', '') }}</span>
+    </div>
+  </footer>
+  {% endblock %}
+</body>
+</html>

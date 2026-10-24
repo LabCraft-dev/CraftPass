@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}Audit log{% endblock %}
+{% block page_title_text %}Audit log{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="card overflow-hidden">
+  <form method="get" action="/admin/audit" class="flex flex-wrap items-end gap-3 border-b border-zinc-200 px-5 py-4">
+    <div class="w-64">
+      <label class="label" for="q">Filter by action prefix</label>
+      <input class="input" id="q" name="q" value="{{ q }}" placeholder="login. / oauth. / totp. / user.">
+    </div>
+    <button type="submit" class="btn-secondary btn-sm">Filter</button>
+    {% if q %}<a href="/admin/audit" class="text-sm text-zinc-500 hover:underline">Clear</a>{% endif %}
+    <p class="ml-auto text-sm text-zinc-500">{{ events|length }} event{{ 's' if events|length != 1 }} (latest 200)</p>
+  </form>
+
+  {% if events %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-zinc-50">
+        <tr>
+          <th class="th">When (UTC)</th><th class="th">Actor</th><th class="th">Action</th>
+          <th class="th">Detail</th><th class="th">IP</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-100">
+        {% for event in events %}
+        <tr class="hover:bg-zinc-50">
+          <td class="td font-mono text-xs whitespace-nowrap">{{ event.at[:19].replace('T', ' ') }}</td>
+          <td class="td">{{ event.actor }}</td>
+          <td class="td"><span class="badge badge-zinc font-mono">{{ event.action }}</span></td>
+          <td class="td max-w-[32rem] truncate">{{ event.detail or '—' }}</td>
+          <td class="td font-mono text-xs">{{ event.ip or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="px-5 py-8 text-center text-sm text-zinc-500">No events match.</p>
+  {% endif %}
+</div>
+{% endblock %}

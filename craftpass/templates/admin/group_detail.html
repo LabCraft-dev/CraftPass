@@ -1,0 +1,68 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block page_title_text %}{{ group.name }}{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="mb-6 flex items-center gap-3">
+  <a href="/admin/groups" class="text-sm text-zinc-500 hover:text-zinc-800">&larr; Groups</a>
+  <h2 class="text-xl font-semibold tracking-tight">{{ group.name }}</h2>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <section class="card p-6">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Description</h3>
+    <form method="post" action="/admin/groups/{{ group.id }}/update" class="mt-4 space-y-4">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <textarea class="input" name="description" rows="4">{{ group.description }}</textarea>
+      <button type="submit" class="btn-primary btn-sm">Save</button>
+    </form>
+    <p class="mt-4 border-t border-zinc-200 pt-4 text-xs text-zinc-500">
+      Group names are fixed once created — apps reference them by name. Create a new
+      group and move members if you need a different name.
+    </p>
+  </section>
+
+  <section class="card p-6">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Members ({{ members|length }})</h3>
+    {% if members %}
+    <ul class="mt-4 divide-y divide-zinc-100">
+      {% for m in members %}
+      <li class="flex items-center justify-between py-2.5 text-sm">
+        <span class="font-medium text-zinc-900">{{ m.username }}
+          {% if m.is_admin %}<span class="badge badge-amber ml-1">admin</span>{% endif %}
+        </span>
+        <a class="text-teal-700 hover:underline" href="/admin/users/{{ m.id }}">Edit</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mt-4 text-sm text-zinc-500">No members yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="card p-6 lg:col-span-2">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Usage &amp; deletion</h3>
+    {% if used_by %}
+    <div class="mt-4">
+      <p class="text-sm text-zinc-600">This group gates access to:</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {% for slug in used_by %}<span class="badge badge-teal font-mono">{{ slug }}</span>{% endfor %}
+      </div>
+      <p class="mt-4 text-sm text-zinc-500">A group that is required by apps cannot be deleted. Repoint those apps first.</p>
+    </div>
+    {% else %}
+    <p class="mt-4 text-sm text-zinc-600">
+      No app requires this group. Deleting it also removes it from every member —
+      affected users lose access to nothing (no app references it).
+    </p>
+    <form method="post" action="/admin/groups/{{ group.id }}/delete" class="mt-4" data-confirm="Delete group {{ group.name }}? Members keep their accounts but lose this group.">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <button type="submit" class="btn-danger btn-sm">Delete group</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

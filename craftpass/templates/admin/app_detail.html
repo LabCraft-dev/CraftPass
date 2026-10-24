@@ -1,0 +1,80 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}{{ app.display_name }}{% endblock %}
+{% block page_title_text %}{{ app.display_name }}{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="mb-6 flex items-center gap-3">
+  <a href="/admin/apps" class="text-sm text-zinc-500 hover:text-zinc-800">&larr; Apps</a>
+  <h2 class="text-xl font-semibold tracking-tight">{{ app.display_name }}
+    <span class="ml-2 font-mono text-sm font-normal text-zinc-400">{{ app.slug }}</span>
+  </h2>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-2">
+  {# -- General ---------------------------------------------------------- #}
+  <form method="post" action="/admin/apps/{{ app.slug }}" class="card space-y-5 p-6">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">General</h3>
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div class="grid gap-5 md:grid-cols-2">
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" value="{{ app.display_name }}" required>
+      </div>
+      <div>
+        <label class="label" for="domain">Domain</label>
+        <input class="input font-mono" id="domain" name="domain" value="{{ app.domain }}" placeholder="app.stream.labcraft.me">
+        <p class="hint">Used as the post-login fallback target for forward-auth.</p>
+      </div>
+      <div>
+        <label class="label" for="required_group">Required group</label>
+        <select class="input" id="required_group" name="required_group">
+          <option value="" {{ 'selected' if not app.required_group }}>Any signed-in user</option>
+          {% for g in groups %}
+          <option value="{{ g.name }}" {{ 'selected' if app.required_group == g.name }}>{{ g.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="auth_mode">Auth mode</label>
+        <select class="input" id="auth_mode" name="auth_mode">
+          <option value="forward_auth" {{ 'selected' if app.auth_mode == 'forward_auth' }}>forward_auth (Caddy)</option>
+          <option value="oidc" {{ 'selected' if app.auth_mode == 'oidc' }}>oidc (native apps)</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary btn-sm">Save general</button>
+  </form>
+
+  {# -- OIDC client -------------------------------------------------------- #}
+  <form method="post" action="/admin/apps/{{ app.slug }}/oidc" class="card space-y-5 p-6"
+        data-confirm="Regenerating replaces the client secret immediately. The old secret stops working. Continue?">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">OIDC client</h3>
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div>
+      <label class="label" for="client_id">Client ID</label>
+      <input class="input font-mono" id="client_id" name="client_id" value="{{ app.oidc_client_id or '' }}" placeholder="{{ app.slug }}">
+      <p class="hint">Empty clears the registration — the app stops appearing as an OIDC client.</p>
+    </div>
+    <div>
+      <label class="label" for="redirect_uris">Redirect URIs (one per line)</label>
+      <textarea class="input font-mono text-xs" id="redirect_uris" name="redirect_uris" rows="3" placeholder="https://app.stream.labcraft.me/sso/OIDC/Callback/craftpass">{{ redirect_uris_text }}</textarea>
+      <p class="hint">Full https URLs; the authorize endpoint rejects anything not on this list.</p>
+    </div>
+    <div class="rounded-lg bg-zinc-50 px-4 py-3 text-sm">
+      {% if secret_set %}
+        <span class="font-medium text-zinc-800">A client secret is set.</span>
+        <span class="text-zinc-500">It is only shown when (re)generated.</span>
+      {% else %}
+        <span class="font-medium text-amber-700">No secret yet — saving generates one.</span>
+      {% endif %}
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="regenerate_secret" class="h-4 w-4 accent-teal-700"> Generate a new secret on save
+    </label>
+    <button type="submit" class="btn-primary btn-sm">Save OIDC client</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts, icon %}
+{% block page_title %}Overview{% endblock %}
+{% block page_title_text %}Overview{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="grid grid-cols-2 gap-4 xl:grid-cols-6">
+  {% set cards = [
+    ('Users', stats.users, 'users', '/admin/users'),
+    ('Administrators', stats.admins, 'shield', '/admin/users'),
+    ('2FA enabled', stats.totp_users, 'lock', '/admin/users'),
+    ('Groups', stats.groups, 'stack', '/admin/groups'),
+    ('Apps', stats.apps, 'key', '/admin/apps'),
+    ('OIDC clients', stats.oidc_clients, 'key', '/admin/apps'),
+  ] %}
+  {% for label, value, ic, href in cards %}
+  <a href="{{ href }}" class="card p-5 transition hover:border-teal-600/60">
+    <div class="flex items-center justify-between text-zinc-400">
+      <span class="text-xs font-semibold uppercase tracking-wider">{{ label }}</span>
+      {{ icon(ic, 'h-4 w-4') }}
+    </div>
+    <p class="mt-3 text-3xl font-semibold tracking-tight text-zinc-900">{{ value }}</p>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="card mt-6 overflow-hidden">
+  <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
+    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Recent activity</h2>
+    <a href="/admin/audit" class="text-sm font-medium text-teal-700 hover:underline">View all</a>
+  </div>
+  {% if recent %}
+  <table class="w-full">
+    <thead class="bg-zinc-50">
+      <tr>
+        <th class="th">When</th><th class="th">Actor</th><th class="th">Action</th>
+        <th class="th">Detail</th><th class="th">IP</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-zinc-100">
+      {% for event in recent %}
+      <tr>
+        <td class="td font-mono text-xs">{{ event.at[:19].replace('T', ' ') }}</td>
+        <td class="td">{{ event.actor }}</td>
+        <td class="td"><span class="badge badge-zinc font-mono">{{ event.action }}</span></td>
+        <td class="td max-w-[28rem] truncate">{{ event.detail or '—' }}</td>
+        <td class="td font-mono text-xs">{{ event.ip or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="px-5 py-8 text-center text-sm text-zinc-500">No audit events yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

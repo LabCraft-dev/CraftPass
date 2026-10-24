@@ -1,0 +1,62 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import flash_alerts %}
+{% block page_title %}Groups{% endblock %}
+{% block page_title_text %}Groups{% endblock %}
+
+{% block content %}
+{{ flash_alerts(flash) }}
+
+<div class="grid gap-6 xl:grid-cols-[1fr_22rem]">
+  <div class="card overflow-hidden">
+    <div class="border-b border-zinc-200 px-5 py-4">
+      <p class="text-sm text-zinc-500">{{ groups|length }} group{{ 's' if groups|length != 1 }}</p>
+    </div>
+    {% if groups %}
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-zinc-50">
+          <tr>
+            <th class="th">Group</th><th class="th">Description</th>
+            <th class="th">Members</th><th class="th">Required by</th><th class="th"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-100">
+          {% for g in groups %}
+          <tr class="hover:bg-zinc-50">
+            <td class="td font-medium text-zinc-900">{{ g.name }}</td>
+            <td class="td max-w-[24rem] truncate text-zinc-600">{{ g.description or '—' }}</td>
+            <td class="td">{{ g.member_count }}</td>
+            <td class="td">
+              {% if usage.get(g.name) %}
+                {% for slug in usage[g.name] %}<span class="badge badge-zinc font-mono">{{ slug }}</span> {% endfor %}
+              {% else %}
+                <span class="text-xs text-zinc-400">—</span>
+              {% endif %}
+            </td>
+            <td class="td"><a class="text-sm font-medium text-teal-700 hover:underline" href="/admin/groups/{{ g.id }}">Edit</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="px-5 py-8 text-center text-sm text-zinc-500">No groups yet.</p>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/admin/groups" class="card h-fit space-y-4 p-6">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">New group</h3>
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div>
+      <label class="label" for="name">Name</label>
+      <input class="input" id="name" name="name" placeholder="e.g. family" required>
+      <p class="hint">Lowercase letters, digits, dash or underscore.</p>
+    </div>
+    <div>
+      <label class="label" for="description">Description</label>
+      <textarea class="input" id="description" name="description" rows="3" placeholder="What is this group for?"></textarea>
+    </div>
+    <button type="submit" class="btn-primary w-full">Create group</button>
+  </form>
+</div>
+{% endblock %}

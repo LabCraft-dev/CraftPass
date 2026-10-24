@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} · CraftPass{% endblock %}
+
+{% block body %}
+<main class="bg-dots flex flex-1 items-center justify-center px-4 py-12">
+  <div class="card w-full max-w-md p-8 text-center">
+    <p class="font-mono text-4xl font-semibold text-zinc-800">{{ status }}</p>
+    <h1 class="mt-3 text-xl font-semibold tracking-tight">Request rejected</h1>
+    <p class="mt-3 text-sm text-zinc-600">{{ detail }}</p>
+    <div class="mt-6 flex justify-center gap-3">
+      <a class="btn-primary" href="/">Start over</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

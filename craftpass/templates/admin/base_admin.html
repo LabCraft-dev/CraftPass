@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}{% block page_title %}Admin{% endblock %} · CraftPass{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block body %}
+<div class="flex min-h-screen">
+  {# ---- Sidebar ---------------------------------------------------- #}
+  <aside class="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-zinc-900 px-4 py-6 md:flex">
+    <div class="flex items-center gap-3 px-2 pb-8">
+      <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700">
+        <svg viewBox="0 0 32 32" class="h-5 w-5" aria-hidden="true">
+          <circle cx="16" cy="13" r="5" fill="#fff"/>
+          <path d="M14 18h4l2.2 8H11.8z" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="text-base font-semibold tracking-tight text-white">CraftPass</span>
+      <span class="ml-auto rounded-md bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">admin</span>
+    </div>
+
+    <nav class="flex flex-1 flex-col gap-1" aria-label="Admin sections">
+      <a href="/admin" class="nav-item {{ 'nav-item-active' if request.url.path == '/admin' else '' }}">{{ icon('shield') }} Overview</a>
+      <a href="/admin/users" class="nav-item {{ 'nav-item-active' if request.url.path.startswith('/admin/users') else '' }}">{{ icon('users') }} Users</a>
+      <a href="/admin/groups" class="nav-item {{ 'nav-item-active' if request.url.path.startswith('/admin/groups') else '' }}">{{ icon('stack') }} Groups</a>
+      <a href="/admin/apps" class="nav-item {{ 'nav-item-active' if request.url.path.startswith('/admin/apps') else '' }}">{{ icon('key') }} Apps</a>
+      <a href="/admin/audit" class="nav-item {{ 'nav-item-active' if request.url.path.startswith('/admin/audit') else '' }}">{{ icon('clock') }} Audit log</a>
+    </nav>
+
+    <div class="mt-4 space-y-1 border-t border-zinc-800 pt-4">
+      <a href="/account" class="nav-item">{{ icon('users') }} My account</a>
+      <form method="post" action="/logout" class="pt-1">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <button type="submit" class="nav-item w-full text-left">Sign out</button>
+      </form>
+    </div>
+  </aside>
+
+  {# ---- Main column ------------------------------------------------ #}
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
+      <h1 class="text-lg font-semibold tracking-tight">{% block page_title_text %}{% endblock %}</h1>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="text-zinc-500">{{ current_user.username }}</span>
+        <span class="badge badge-teal">admin</span>
+      </div>
+    </header>
+
+    {# Compact nav for phones (sidebar is hidden below md) #}
+    <nav class="flex gap-1 overflow-x-auto border-b border-zinc-200 bg-white px-4 py-2 md:hidden" aria-label="Admin sections">
+      <a href="/admin" class="btn-secondary btn-sm whitespace-nowrap">Overview</a>
+      <a href="/admin/users" class="btn-secondary btn-sm whitespace-nowrap">Users</a>
+      <a href="/admin/groups" class="btn-secondary btn-sm whitespace-nowrap">Groups</a>
+      <a href="/admin/apps" class="btn-secondary btn-sm whitespace-nowrap">Apps</a>
+      <a href="/admin/audit" class="btn-secondary btn-sm whitespace-nowrap">Audit</a>
+      <a href="/account" class="btn-secondary btn-sm whitespace-nowrap">My account</a>
+      <a href="/logout" class="btn-secondary btn-sm whitespace-nowrap">Sign out</a>
+    </nav>
+
+    <main class="flex-1 bg-zinc-100 p-6">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="/static/admin.js" defer></script>
+{% endblock %}
