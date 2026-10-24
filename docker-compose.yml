@@ -1,0 +1,67 @@
+# CraftPass reference stack.
+#
+# This file is a complete, self-contained arrangement (useful for testing and
+# for bootstrapping). In the real LabCraft deployment the craftpass and
+# cloudflared services are pasted into the existing stack compose file so
+# they share its network — see docs/DEPLOYMENT.md.
+
+name: labcraft
+
+services:
+  # ---------------------------------------------------------------- gateway
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"          # HTTP/3
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - labcraft-net
+    # Slot your existing services in here, e.g.:
+    # jellyfin:
+    #   image: jellyfin/jellyfin:latest
+    #   ...
+
+  # -------------------------------------------------------------------- sso
+  craftpass:
+    build: .
+    container_name: craftpass
+    restart: unless-stopped
+    environment:
+      ISSUER_URL: ${ISSUER_URL:-https://auth.labcraft.me}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.labcraft.me}
+      DEFAULT_REDIRECT_URL: ${DEFAULT_REDIRECT_URL:-https://dash.stream.labcraft.me}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      # Optional: require this token while /setup is unclaimed.
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+      # Dev only — never disable in production.
+      SECURE_COOKIES: ${SECURE_COOKIES:-true}
+    volumes:
+      # Host directory must be owned by uid 1000 (see docs/DEPLOYMENT.md).
+      - ./data/auth:/data
+    networks:
+      - labcraft-net
+    # Never publish craftpass' port; Caddy and cloudflared reach it by name.
+
+  # ------------------------------------------------------- public auth route
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    networks:
+      - labcraft-net
+
+networks:
+  labcraft-net:
+    name: labcraft-net
+
+volumes:
+  caddy_data:
+  caddy_config:

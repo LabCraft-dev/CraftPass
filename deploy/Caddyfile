@@ -1,0 +1,123 @@
+{
+	email chandimaprabath.it@gmail.com
+	acme_ca https://acme.zerossl.com/v2/DV90
+}
+
+# ---------------------------------------------------------------------------
+# Reusable SSO guards.
+#
+# CraftPass verifies the craftpass_sso cookie and answers Caddy:
+#   200 + X-Auth-User/X-Auth-Groups  -> allowed, identity copied upstream
+#   302 to auth.labcraft.me/login     -> no session; user is bounced and sent
+#                                        back to the URL they requested
+#   403 HTML                          -> signed in, but wrong group
+#
+# `{args[0]}` is the app slug passed via `import sso_guard <slug>` — it must
+# match the slug registered in /admin/apps. On Caddy 2.5–2.8 write it
+# `{args.0}` instead.
+# ---------------------------------------------------------------------------
+
+(sso_guard) {
+	forward_auth craftpass:8000 {
+		uri /verify/{args[0]}
+		copy_headers X-Auth-User X-Auth-Groups
+	}
+}
+
+# Variant for the *arr stack: requests carrying an API key (nzb360, LunaSea
+# and other mobile clients) skip the cookie check — the *arr app validates
+# the key itself on the API call.
+(sso_guard_arr) {
+	@browser_requests {
+		not header X-Api-Key *
+		not query apikey=*
+	}
+	forward_auth @browser_requests craftpass:8000 {
+		uri /verify/{args[0]}
+		copy_headers X-Auth-User X-Auth-Groups
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Media — 'media' group + admins
+# ---------------------------------------------------------------------------
+# Jellyfin is NOT forward-auth'd: native TV/mobile apps authenticate with the
+# OIDC provider instead (see docs/JELLYFIN.md). The web login page stays
+# public by design.
+jellyfin.stream.labcraft.me {
+	reverse_proxy jellyfin:8096
+}
+
+seerr.stream.labcraft.me {
+	import sso_guard seerr
+	reverse_proxy seerr:5055
+}
+
+# Unified dashboard — 'media' group + admins
+dash.stream.labcraft.me {
+	import sso_guard dash
+	reverse_proxy prismarr:7070
+}
+
+# ---------------------------------------------------------------------------
+# Automation — 'arr_admin' group + admins
+# ---------------------------------------------------------------------------
+sonarr.stream.labcraft.me {
+	import sso_guard_arr sonarr
+	reverse_proxy sonarr:8989
+}
+
+radarr.stream.labcraft.me {
+	import sso_guard_arr radarr
+	reverse_proxy radarr:7878
+}
+
+prowlarr.stream.labcraft.me {
+	import sso_guard_arr prowlarr
+	reverse_proxy prowlarr:9696
+}
+
+bazarr.stream.labcraft.me {
+	import sso_guard_arr bazarr
+	reverse_proxy bazarr:6767
+}
+
+suggestarr.stream.labcraft.me {
+	import sso_guard suggestarr
+	reverse_proxy suggestarr:5000
+}
+
+# Wizarr — invite links must stay public for guests; only the admin
+# dashboard is behind the guard.
+wizarr.stream.labcraft.me {
+	@wizarr_admin {
+		not path /j/* /join* /static/* /setup*
+	}
+	forward_auth @wizarr_admin craftpass:8000 {
+		uri /verify/wizarr
+		copy_headers X-Auth-User X-Auth-Groups
+	}
+	reverse_proxy wizarr:5690
+}
+
+# ---------------------------------------------------------------------------
+# Downloads — 'downloads' group + admins
+# ---------------------------------------------------------------------------
+qbit.stream.labcraft.me {
+	import sso_guard qbit
+	reverse_proxy qbittorrent:8080
+}
+
+download.stream.labcraft.me {
+	import sso_guard download
+	reverse_proxy gopeed:9999
+}
+
+# ---------------------------------------------------------------------------
+# Future *.labcraft.me apps (orange-clouded through Cloudflare) follow the
+# same pattern: `import sso_guard <slug>` above `reverse_proxy`.
+#
+# auth.labcraft.me is deliberately ABSENT here: it is published through the
+# Cloudflare Tunnel directly to craftpass:8000 and must never require a
+# session to reach (chicken-and-egg).
+# ---------------------------------------------------------------------------
