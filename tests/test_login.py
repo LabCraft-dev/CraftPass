@@ -101,9 +101,7 @@ def test_totp_full_lifecycle(admin_client, settings, monkeypatch):
     frozen_at = 1_800_000_000
     from craftpass.security import TotpService
 
-    monkeypatch.setattr(
-        TotpService, "step_at", lambda self, now=None: 60_000_000
-    )
+    monkeypatch.setattr(TotpService, "step_at", lambda self, now=None: 60_000_000)
 
     # 1. Enroll via the self-service page.
     csrf = admin_client.cookies["craftpass_csrf"]
