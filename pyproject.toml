@@ -1,10 +1,10 @@
 [project]
 name = "craftpass"
-version = "0.1.0"
 description = "Self-hosted single sign-on: Caddy forward-auth gateway + OpenID Connect provider for the LabCraft stack"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+dynamic = ["version"]
 authors = [{ name = "LabCraft-dev" }]
 keywords = ["sso", "oidc", "forward-auth", "fastapi", "caddy", "jellyfin"]
 classifiers = [
@@ -42,8 +42,15 @@ Homepage = "https://github.com/LabCraft-dev/CraftPass"
 Issues = "https://github.com/LabCraft-dev/CraftPass/issues"
 
 [build-system]
-requires = ["setuptools>=80"]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
+
+# Version derives from git tags (setuptools-scm): a checkout at v1.2.3
+# builds version 1.2.3; commits past the tag build 1.2.4.devN+g<sha>.
+# The git tag that triggers the Docker Hub release IS the version —
+# nothing to bump by hand. fallback keeps shallow CI checkouts working.
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
 
 [tool.setuptools.packages.find]
 include = ["craftpass*"]

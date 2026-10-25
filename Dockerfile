@@ -25,6 +25,9 @@ RUN set -eux; \
 
 # ---------------------------------------------------------------- build wheels
 FROM ${PYTHON_IMAGE} AS wheels
+# Real version is injected by CI (git describe); plain local builds get 0.0.0.
+ARG APP_VERSION=0.0.0
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=${APP_VERSION}
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE ./
 COPY craftpass/ ./craftpass/

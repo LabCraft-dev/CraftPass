@@ -97,6 +97,8 @@ jobs:
     if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history + tags: git describe -> version
       - name: Check Docker Hub credentials
         id: creds
         env:
@@ -109,6 +111,19 @@ jobs:
             echo "ok=false" >> "$GITHUB_OUTPUT"
             echo "::notice::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN secrets are not set; skipping image push."
           fi
+      - name: Derive package version from git
+        id: ver
+        run: |
+          set -eux
+          desc="$(git describe --tags --match 'v*' 2>/dev/null || true)"
+          if [ -n "$desc" ]; then
+            # v1.2.3 -> 1.2.3 | v1.2.3-5-gabcdef -> 1.2.3.dev5+gabcdef (PEP 440)
+            ver="$(printf '%s' "$desc" | sed -E 's/^v//; s/-([0-9]+)-g([0-9a-f]+)$/.dev\1+g\2/')"
+          else
+            ver="0.1.0.dev0+g${GITHUB_SHA:0:7}"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "baked-in version: $ver"
       - uses: docker/setup-qemu-action@v3
         if: steps.creds.outputs.ok == 'true'
       - uses: docker/setup-buildx-action@v3
@@ -142,6 +157,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.ver.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

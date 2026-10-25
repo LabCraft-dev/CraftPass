@@ -32,6 +32,8 @@ services:
   craftpass:
     # Preferred once releases are published — set your Docker Hub namespace:
     # image: your-dockerhub-user/craftpass:latest
+    # Local builds bake version 0.0.0 unless APP_VERSION is passed:
+    # docker compose build --build-arg APP_VERSION=$(git describe --tags)
     build: .                       # local-build fallback
     container_name: craftpass
     restart: unless-stopped

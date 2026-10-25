@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from craftpass import db
+from craftpass import __version__, db
 from craftpass.config import Settings, get_settings
 from craftpass.ratelimit import SlidingWindowLimiter
 from craftpass.routes import admin, oidc, portal, verify
@@ -45,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title="CraftPass",
-        version="0.1.0",
+        version=__version__,
         lifespan=_lifespan,
         docs_url=None,
         redoc_url=None,
@@ -103,7 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/healthz", include_in_schema=False)
     def healthz() -> dict:
-        return {"ok": True}
+        return {"ok": True, "version": __version__}
 
     return app
 

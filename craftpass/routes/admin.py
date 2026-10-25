@@ -15,7 +15,7 @@ from sqlite3 import Connection, IntegrityError
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
-from craftpass import db
+from craftpass import __version__, db
 from craftpass.config import Settings
 from craftpass.routes.portal import _EMAIL_RE
 from craftpass.security import password_problem, username_problem
@@ -127,6 +127,7 @@ def overview(request: Request, conn: Connection = Depends(get_conn)):
             "current_user": user,
             "stats": counters,
             "recent": db.recent_audit(conn, limit=8),
+            "version": __version__,
         },
     )
 

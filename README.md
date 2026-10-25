@@ -76,11 +76,19 @@ cookie flags are the only difference from production behavior.
 
 ## Releases
 
+Versions are derived from git tags ([setuptools-scm][scm]) — there is no
+version number to bump by hand. The same tag drives the Docker Hub release,
+so the image tag, the package version and `/healthz` always agree.
+
+[scm]: https://setuptools-scm.readthedocs.io/
+
 CI builds multi-arch images (`linux/amd64` + `linux/arm64`) and publishes
 them to Docker Hub once the `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` repo
 secrets are set (Settings → Secrets and variables → Actions):
 
-* every push to `main` → `<namespace>/craftpass:edge`
+* every push to `main` → `<namespace>/craftpass:edge` (version like
+  `0.1.0.dev3+g1a2b3c`, baked into the image and shown in the admin
+  overview and `/healthz`)
 * pushing a tag → semver tags + `latest` (`v1.2.3` → `1.2.3`, `1.2`, `1`;
   while `0.x` the major-only tag is skipped)
 
