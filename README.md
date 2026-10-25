@@ -74,6 +74,24 @@ make dev          # uvicorn --reload on 127.0.0.1:8000
 Local http testing needs `SECURE_COOKIES=false` (see `.env.example`) — the
 cookie flags are the only difference from production behavior.
 
+## Releases
+
+CI builds multi-arch images (`linux/amd64` + `linux/arm64`) and publishes
+them to Docker Hub once the `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` repo
+secrets are set (Settings → Secrets and variables → Actions):
+
+* every push to `main` → `<namespace>/craftpass:edge`
+* pushing a tag → semver tags + `latest` (`v1.2.3` → `1.2.3`, `1.2`, `1`;
+  while `0.x` the major-only tag is skipped)
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Until the secrets are configured the publish job skips itself; validation
+jobs (lint, tests, Caddyfile, image builds) always run.
+
 ## Project layout
 
 ```

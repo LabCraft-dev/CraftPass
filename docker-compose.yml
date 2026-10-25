@@ -30,7 +30,9 @@ services:
 
   # -------------------------------------------------------------------- sso
   craftpass:
-    build: .
+    # Preferred once releases are published — set your Docker Hub namespace:
+    # image: your-dockerhub-user/craftpass:latest
+    build: .                       # local-build fallback
     container_name: craftpass
     restart: unless-stopped
     environment:
