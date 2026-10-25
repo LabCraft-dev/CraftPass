@@ -18,7 +18,7 @@ RUN set -eux; \
         arm64) url="https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-arm64" ;; \
         *)     url="https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64" ;; \
     esac; \
-    curl -fsSL "$url" -o /usr/local/bin/tailwindcss; \
+    python -c "import urllib.request as u; u.urlretrieve('${url}', '/usr/local/bin/tailwindcss')"; \
     chmod +x /usr/local/bin/tailwindcss; \
     cd craftpass; \
     tailwindcss -i static/src/main.css -o static/app.css --minify
