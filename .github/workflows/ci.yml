@@ -18,6 +18,16 @@ jobs:
       - run: pip install -e ".[dev]" --quiet
       - run: ruff check .
       - run: ruff format --check .
+      - name: Lint workflow files (actionlint)
+        run: |
+          set -eux
+          tag="$(curl -fsSL -o /dev/null -w '%{url_effective}' -L \
+            https://github.com/rhysd/actionlint/releases/latest | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+$')"
+          curl -fsSL \
+            "https://github.com/rhysd/actionlint/releases/download/${tag}/actionlint_${tag#v}_linux_amd64.tar.gz" \
+            -o /tmp/actionlint.tgz
+          tar -xzf /tmp/actionlint.tgz -C /tmp actionlint
+          /tmp/actionlint -color
 
   test:
     name: Tests (py${{ matrix.python }})
@@ -81,23 +91,37 @@ jobs:
     name: Publish to Docker Hub
     runs-on: ubuntu-latest
     needs: [lint, test, caddyfile, image]
-    # Runs on main (edge tag) and v* tags (semver + latest). Skips
-    # cleanly on PRs and until the DOCKERHUB_* repo secrets are set.
-    if: >-
-      github.event_name != 'pull_request' &&
-      secrets.DOCKERHUB_USERNAME != '' &&
-      secrets.DOCKERHUB_TOKEN != ''
+    # Runs on main (edge tag) and v* tags (semver + latest); never on
+    # PRs. Docker Hub credentials are checked in-step because the
+    # secrets context is not available in job-level if conditions.
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
+      - name: Check Docker Hub credentials
+        id: creds
+        env:
+          USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$USERNAME" ] && [ -n "$TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN secrets are not set; skipping image push."
+          fi
       - uses: docker/setup-qemu-action@v3
+        if: steps.creds.outputs.ok == 'true'
       - uses: docker/setup-buildx-action@v3
+        if: steps.creds.outputs.ok == 'true'
       - name: Log in to Docker Hub
+        if: steps.creds.outputs.ok == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Derive image tags
         id: meta
+        if: steps.creds.outputs.ok == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/craftpass
@@ -112,6 +136,7 @@ jobs:
             type=edge,branch=main
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
       - name: Build & push (amd64 + arm64)
+        if: steps.creds.outputs.ok == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
